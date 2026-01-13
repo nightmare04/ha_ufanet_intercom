@@ -38,13 +38,8 @@ if TYPE_CHECKING:
     from .data import UfanetIntercomConfigEntry
 
 PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
-    Platform.FAN,
-    Platform.NUMBER,
-    Platform.SELECT,
     Platform.SENSOR,
-    Platform.SWITCH,
 ]
 
 # This integration is configured via config entries only
@@ -125,8 +120,8 @@ async def async_setup_entry(
         logger=LOGGER,
         name=DOMAIN,
         config_entry=entry,
-        update_interval=timedelta(hours=1),
-        always_update=False,  # Only update entities when data actually changes
+        update_interval=timedelta(hours=24),
+        always_update=True,  # Only update entities when data actually changes
     )
 
     # Store runtime data
