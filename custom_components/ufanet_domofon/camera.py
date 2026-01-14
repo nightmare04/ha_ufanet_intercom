@@ -25,10 +25,10 @@ async def async_setup_entry(
     entities = []
 
     # Add cameras attached to domofons
-    for domofon_camera in coordinator.domofon_camera_map.values():
-        if domofon_camera["camera"]:
-            domofon = domofon_camera["domofon"]
-            camera = domofon_camera["camera"]
+    for data in coordinator.domofons_cameras.values():
+        if data["camera"]:
+            domofon = data["domofon"]
+            camera = data["camera"]
             entities.append(DomofonCamera(coordinator, domofon, camera))
 
     # Add standalone cameras
@@ -76,19 +76,19 @@ class DomofonCamera(UfanetCamera):
         super().__init__(coordinator, camera_data)
 
         self._domofon_data = domofon_data
-        domofon_name = camera_data.get("title", "Domofon")
+        camera_name = camera_data.get("title", "Домофон")
 
-        self._attr_name = f"{domofon_name} Camera"
+        self._attr_name = f"Камера {camera_name}"
         self._attr_unique_id = f"ufanet_domofon_{domofon_data['id']}_camera"
 
-        self._attr_extra_state_attributes.update({"domofon_id": domofon_data.get("id"), "domofon_name": domofon_name})
+        self._attr_extra_state_attributes.update({"domofon_id": domofon_data.get("id"), "camera_name": camera_name})
 
     @property
     def device_info(self):
         """Return device information for linking entities."""
         return {
             "identifiers": {(DOMAIN, self._domofon_data["id"])},
-            "name": self._domofon_data.get("name", "Domofon"),
+            "name": f"Домофон {self._domofon_data.get('custom_name', '')}",
             "manufacturer": "Ufanet",
             "model": "Domofon System",
         }
@@ -104,6 +104,16 @@ class StandaloneCamera(UfanetCamera):
     def __init__(self, coordinator, camera_data):
         """Initialize."""
         super().__init__(coordinator, camera_data)
+
+    @property
+    def device_info(self):
+        """Return device information for linking entities."""
+        return {
+            "identifiers": {(DOMAIN, "standalone_camera")},
+            "name": "Камеры Ufanet",
+            "manufacturer": "Ufanet",
+            "model": "Domofon System",
+        }
 
     @property
     def stream_source(self) -> str | None:

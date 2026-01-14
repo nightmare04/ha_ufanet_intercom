@@ -33,8 +33,8 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
         self._refresh_token = None
 
         self.domofons = []
-        self.cameras = []
-        self.domofon_camera_map = {}
+        self.all_cameras = []
+        self.domofons_cameras = {}
         self.standalone_cameras = []
 
     async def _async_login(self):
@@ -53,7 +53,7 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
 
                 # Извлечение токена из ответа
                 self._access_token = data.get("token").get("access")
-                self._refresh_token = data.get("refresh_token")
+                self._refresh_token = data.get("token").get("refresh")
 
                 if not self._access_token:
                     _LOGGER.error("Token not found in response: %s", data)
@@ -92,7 +92,7 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
                 response.raise_for_status()
                 cameras_data = await response.json()
 
-                self.cameras = []
+                self.all_cameras = []
                 for camera in cameras_data:
                     # Generate RTSP URL
                     domain = camera.get("servers", {}).get("domain", "")
@@ -101,29 +101,23 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
 
                     if domain and token_l and number:
                         rtsp_url = f"rtsp://{domain}/{number}?token={token_l}"
-                        camera["rtsp_url"] = rtsp_url
                         camera["stream_source"] = rtsp_url
 
-                    # Add still image URL if available
-                    screenshot_domain = camera.get("servers", {}).get("screenshot_domain")
-                    if screenshot_domain and number:
-                        camera["still_image_url"] = f"https://{screenshot_domain}/snapshot/{number}"
+                    self.all_cameras.append(camera)
 
-                    self.cameras.append(camera)
-
-                _LOGGER.debug("Fetched %s cameras", len(self.cameras))
+                _LOGGER.debug("Fetched %s cameras", len(self.all_cameras))
 
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to fetch cameras: %s", err)
-            self.cameras = []
+            self.all_cameras = []
 
     def _map_cameras_to_domofons(self):
         """Map cameras to domofons based on cctv_number."""
-        self.domofon_camera_map = {}
+        self.domofons_cameras = {}
         self.standalone_cameras = []
 
         # Create a lookup dictionary for cameras by number
-        cameras_by_number = {cam.get("number"): cam for cam in self.cameras}
+        cameras_by_number = {cam.get("number"): cam for cam in self.all_cameras}
 
         # Map cameras to domofons
         for domofon in self.domofons:
@@ -136,7 +130,7 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
                 # Mark this camera as used
                 cameras_by_number.pop(cctv_number)
 
-            self.domofon_camera_map[domofon_id] = {"domofon": domofon, "camera": camera_data}
+            self.domofons_cameras[domofon_id] = {"domofon": domofon, "camera": camera_data}
 
         # Remaining cameras are standalone
         self.standalone_cameras = list(cameras_by_number.values())
@@ -162,8 +156,8 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
             # Return structured data for platforms
             return {
                 "domofons": self.domofons,
-                "cameras": self.cameras,
-                "domofon_camera_map": self.domofon_camera_map,
+                "cameras": self.all_cameras,
+                "domofon_camera_map": self.domofons_cameras,
                 "standalone_cameras": self.standalone_cameras,
             }
 
