@@ -93,23 +93,6 @@ class DomofonCamera(UfanetCamera):
             "model": "Domofon System",
         }
 
-    # async def async_camera_image(self, width: int | None = None, height: int | None = None) -> bytes | None:
-    #     """Return bytes of camera image."""
-    #     if "still_image_url" in self._camera_data:
-    #         # Fetch from screenshot endpoint
-    #         try:
-    #             session = self.coordinator._session
-    #             headers = await self.coordinator._get_headers()
-
-    #             async with session.get(self._camera_data["still_image_url"], headers=headers) as response:
-    #                 if response.status == 200:
-    #                     return await response.read()
-    #         except Exception as err:
-    #             _LOGGER.error("Error fetching still image: %s", err)
-
-    #     # Fallback to RTSP frame capture would require additional setup
-    #     return None
-
     def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._camera_data.get("stream_source")
@@ -121,21 +104,6 @@ class StandaloneCamera(UfanetCamera):
     def __init__(self, coordinator, camera_data):
         """Initialize."""
         super().__init__(coordinator, camera_data)
-
-    # async def async_camera_image(self, width: int | None = None, height: int | None = None) -> bytes | None:
-    #     """Return bytes of camera image."""
-    #     # Similar implementation as DomofonCamera
-    #     if "still_image_url" in self._camera_data:
-    #         try:
-    #             session = self.coordinator._session
-    #             headers = await self.coordinator._get_headers()
-
-    #             async with session.get(self._camera_data["still_image_url"], headers=headers) as response:
-    #                 if response.status == 200:
-    #                     return await response.read()
-    #         except Exception:
-    #             pass
-    #     return None
 
     @property
     def stream_source(self) -> str | None:
