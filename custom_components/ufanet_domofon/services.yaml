@@ -1,0 +1,11 @@
+open_door:
+  name: Open door
+  description: Open a specific domofon door
+  fields:
+    domofon_id:
+      name: Domofon ID
+      description: ID of the domofon to open
+      required: true
+      example: "12345"
+      selector:
+        text:
