@@ -76,7 +76,7 @@ class DomofonCamera(UfanetCamera):
         super().__init__(coordinator, camera_data)
 
         self._domofon_data = domofon_data
-        domofon_name = domofon_data.get("name", "Domofon")
+        domofon_name = camera_data.get("title", "Domofon")
 
         self._attr_name = f"{domofon_name} Camera"
         self._attr_unique_id = f"ufanet_domofon_{domofon_data['id']}_camera"
@@ -110,7 +110,6 @@ class DomofonCamera(UfanetCamera):
     #     # Fallback to RTSP frame capture would require additional setup
     #     return None
 
-    @property
     def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._camera_data.get("stream_source")

@@ -171,7 +171,7 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
         """Send open door command for specific domofon."""
         try:
             headers = await self._get_headers()
-            async with self._session.post(
+            async with self._session.get(
                 f"{BASE_URL}{DOMOFONS_ENDPOINT}{domofon_id}/open/", headers=headers
             ) as response:
                 if response.status == 200:

@@ -40,13 +40,12 @@ class OpenDoorButton(CoordinatorEntity, ButtonEntity):
 
         self._domofon_data = domofon_data
         self._domofon_id = domofon_data.get("id")
-        self._domofon_name = domofon_data.get("name", "Domofon")
+        self._domofon_name = domofon_data.get("custom_name", "Domofon")
         self._last_opened = None
 
         self._attr_name = f"{self._domofon_name} Open Door"
         self._attr_unique_id = f"ufanet_domofon_{self._domofon_id}_button"
         self._attr_icon = "mdi:door-open"
-        self._attr_device_class = "restart"  # type: ignore  # noqa: PGH003
 
         self._attr_extra_state_attributes = {
             "domofon_id": self._domofon_id,
