@@ -94,7 +94,6 @@ class DomofonCamera(UfanetCamera):
         """Return the name of the sensor."""
         return "Камера"
 
-    @property
     def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._camera_data.get("stream_source")
@@ -118,7 +117,6 @@ class StandaloneCamera(UfanetCamera):
             "manufacturer": "Ufanet",
         }
 
-    @property
     def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._camera_data.get("stream_source")
