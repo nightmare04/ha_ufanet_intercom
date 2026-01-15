@@ -25,7 +25,7 @@ async def async_setup_entry(
     entities = []
 
     # Add cameras attached to domofons
-    for data in coordinator.domofons_cameras.values():
+    for data in coordinator.domofons_cameras.values():  # type: ignore  # noqa: PGH003
         if data["camera"]:
             domofon = data["domofon"]
             camera = data["camera"]
@@ -49,17 +49,12 @@ class UfanetCamera(CoordinatorEntity, Camera):
 
         self._camera_data = camera_data
         self._number = camera_data.get("number")
-        self._name = camera_data.get("title", f"Camera {self._number}")
         self._unique_id = f"ufanet_camera_{self._number}"
-
-        self._attr_name = self._name
         self._attr_unique_id = self._unique_id
         self._attr_extra_state_attributes = {
             ATTR_ADDRESS: camera_data.get("address"),
             ATTR_LATITUDE: camera_data.get("latitude"),
             ATTR_LONGITUDE: camera_data.get("longitude"),
-            "camera_type": camera_data.get("type", "unknown"),
-            "vendor": camera_data.get("servers", {}).get("vendor_name", "Ufanet"),
         }
 
     @property
@@ -76,23 +71,30 @@ class DomofonCamera(UfanetCamera):
         super().__init__(coordinator, camera_data)
 
         self._domofon_data = domofon_data
-        camera_name = camera_data.get("title", "Домофон")
-
-        self._attr_name = f"Камера {camera_name}"
+        self.entity_id = f"camera.domofon_{domofon_data['id']}"
+        self._attr_friendly_name = "Камера домофона"
+        self.device_name = f"Домофон {camera_data.get('title', '')}"
+        self._attr_name = "Камера"
         self._attr_unique_id = f"ufanet_domofon_{domofon_data['id']}_camera"
-
-        self._attr_extra_state_attributes.update({"domofon_id": domofon_data.get("id"), "camera_name": camera_name})
+        self._attr_extra_state_attributes.update(
+            {"domofon_id": domofon_data.get("id"), "camera_name": self.device_name}
+        )
 
     @property
     def device_info(self):
         """Return device information for linking entities."""
         return {
             "identifiers": {(DOMAIN, self._domofon_data["id"])},
-            "name": f"Домофон {self._domofon_data.get('custom_name', '')}",
+            "name": self.device_name,
             "manufacturer": "Ufanet",
-            "model": "Domofon System",
         }
 
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return "Камера"
+
+    @property
     def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._camera_data.get("stream_source")
@@ -104,6 +106,8 @@ class StandaloneCamera(UfanetCamera):
     def __init__(self, coordinator, camera_data):
         """Initialize."""
         super().__init__(coordinator, camera_data)
+        self._name = camera_data.get("title", f"Camera {self._number}")
+        self._attr_name = self._name
 
     @property
     def device_info(self):
@@ -112,7 +116,6 @@ class StandaloneCamera(UfanetCamera):
             "identifiers": {(DOMAIN, "standalone_camera")},
             "name": "Камеры Ufanet",
             "manufacturer": "Ufanet",
-            "model": "Domofon System",
         }
 
     @property
