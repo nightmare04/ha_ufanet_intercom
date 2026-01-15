@@ -1,6 +1,5 @@
 """Button platform for Ufanet Domofon."""
 
-from datetime import datetime
 import logging
 
 from homeassistant.components.button import ButtonEntity
@@ -9,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_LAST_OPENED, DOMAIN
+from .const import DOMAIN
 from .coordinator import UfanetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,9 +59,6 @@ class OpenDoorButton(CoordinatorEntity, ButtonEntity):
         success = await self.coordinator.async_open_door(self._domofon_id)  # type: ignore  # noqa: PGH003
 
         if success:
-            self._last_opened = datetime.now().isoformat()
-            self._attr_extra_state_attributes[ATTR_LAST_OPENED] = self._last_opened
-
             # Fire an event for automations
             self.hass.bus.async_fire(
                 "ufanet_door_opened",
