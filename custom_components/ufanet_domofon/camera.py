@@ -3,12 +3,13 @@
 import logging
 
 from homeassistant.components.camera import Camera, CameraEntityDescription, CameraEntityFeature
+from homeassistant.components.camera.const import StreamType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_ADDRESS, ATTR_CAMERA_NUMBER, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_RTSP_URL, DOMAIN
+from .const import DOMAIN
 from .coordinator import UfanetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ async def async_setup_entry(
     entities = []
 
     # Add cameras attached to domofons
-    for data in coordinator.domofons_cameras.values():  # type: ignore  # noqa: PGH003
+    for data in coordinator.domofons_cameras.values():
         if data["camera"]:
             domofon = data["domofon"]
             camera = data["camera"]
@@ -43,7 +44,13 @@ class UfanetCamera(CoordinatorEntity, Camera):
     """Base class for Ufanet cameras."""
 
     _attr_supported_features = CameraEntityFeature.STREAM
+    _attr_frontend_stream_type = StreamType.HLS
     _attr_motion_detection_enabled = False
+
+    entity_description = CameraEntityDescription(
+        key="camera",
+        icon="mdi:doorbell-video",
+    )
 
     def __init__(self, coordinator, camera_data):
         """Initialize."""
@@ -54,25 +61,19 @@ class UfanetCamera(CoordinatorEntity, Camera):
         self._number = camera_data.get("number")
         self._unique_id = f"ufanet_camera_{self._number}"
         self._attr_unique_id = self._unique_id
-        self._attr_extra_state_attributes = {
-            ATTR_ADDRESS: camera_data.get("address"),
-            ATTR_LATITUDE: camera_data.get("latitude"),
-            ATTR_LONGITUDE: camera_data.get("longitude"),
-        }
 
     @property
     def use_stream_for_stills(self) -> bool:
         """Use stream to generate stills."""
         return True
 
+    async def stream_source(self) -> str | None:
+        """Return the stream source."""
+        return self._camera_data.get("stream_source")
+
 
 class DomofonCamera(UfanetCamera):
     """Camera attached to a domofon."""
-
-    entity_description = CameraEntityDescription(
-        key="camera",
-        icon="mdi:doorbell-video",
-    )
 
     def __init__(self, coordinator, domofon_data, camera_data):
         """Initialize."""
@@ -80,44 +81,17 @@ class DomofonCamera(UfanetCamera):
 
         self._domofon_data = domofon_data
         self.entity_id = f"camera.domofon_{domofon_data['id']}"
-        self._attr_friendly_name = "Камера домофона"
-        self.device_name = f"Домофон {camera_data.get('title', '')}"
-        self._attr_name = "Камера"
+        self._attr_name = f"Камера {self._domofon_data.get('custom_name', '')}"
         self._attr_unique_id = f"ufanet_domofon_{domofon_data['id']}_camera"
-        self._attr_extra_state_attributes.update(
-            {"domofon_id": domofon_data.get("id"), "camera_name": self.device_name}
-        )
 
     @property
     def device_info(self):
         """Return device information for linking entities."""
         return {
             "identifiers": {(DOMAIN, self._domofon_data["id"])},
-            "name": self.device_name,
+            "name": f"Домофон {self._domofon_data.get('custom_name', '')}",
             "manufacturer": "Ufanet",
         }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "Камера"
-
-    @property
-    def use_stream_for_stills(self) -> bool:
-        """Use stream to generate stills."""
-        return True
-
-    @property
-    def extra_state_attributes(self):
-        """Return additional camera attributes."""
-        return {
-            ATTR_CAMERA_NUMBER: self._camera_data.get("number", ""),
-            ATTR_RTSP_URL: self._camera_data.get("stream_source", ""),
-        }
-
-    async def stream_source(self) -> str | None:
-        """Return the stream source."""
-        return self._camera_data.get("stream_source")
 
 
 class StandaloneCamera(UfanetCamera):
@@ -137,12 +111,3 @@ class StandaloneCamera(UfanetCamera):
             "name": "Камеры Ufanet",
             "manufacturer": "Ufanet",
         }
-
-    @property
-    def use_stream_for_stills(self) -> bool:
-        """Use stream to generate stills."""
-        return True
-
-    async def stream_source(self) -> str | None:
-        """Return the stream source."""
-        return self._camera_data.get("stream_source")
