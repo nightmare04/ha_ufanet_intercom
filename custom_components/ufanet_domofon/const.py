@@ -10,6 +10,7 @@ AUTH_ENDPOINT = "api/v1/auth/auth_by_contract/"
 DOMOFONS_ENDPOINT = "api/v0/skud/shared/"
 OPEN_DOOR_ENDPOINT = "api/v0/skud/shared/{id}/open/"
 CAMERAS_ENDPOINT = "api/v1/cctv"
+CONTRACT_ENDPOINT = "api/v0/contract/"
 
 # Configuration keys
 CONF_CONTRACT = "contract"
@@ -24,7 +25,7 @@ ATTR_LATITUDE = "latitude"
 ATTR_LONGITUDE = "longitude"
 
 # Platforms
-PLATFORMS = ["camera", "button"]
+PLATFORMS = ["camera", "button", "sensor"]
 
 # Attributes
 ATTR_CAMERA_NUMBER = "intercom_id"

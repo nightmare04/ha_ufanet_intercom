@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import AUTH_ENDPOINT, BASE_URL, CAMERAS_ENDPOINT, DOMOFONS_ENDPOINT, SCAN_INTERVAL
+from .const import AUTH_ENDPOINT, BASE_URL, CAMERAS_ENDPOINT, CONTRACT_ENDPOINT, DOMOFONS_ENDPOINT, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
         self._refresh_token = None
 
         self.domofons = []
+        self.contracts = []
         self.all_cameras = []
         self.domofons_cameras = {}
         self.standalone_cameras = []
@@ -83,6 +84,18 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to fetch domofons: %s", err)
             self.domofons = []
+
+    async def _fetch_contracts(self):
+        """Fetch domofons list."""
+        try:
+            headers = await self._get_headers()
+            async with self._session.get(f"{BASE_URL}{CONTRACT_ENDPOINT}", headers=headers) as response:
+                response.raise_for_status()
+                self.contracts = await response.json()
+                _LOGGER.debug("Fetched %s domofons", len(self.domofons))
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Failed to fetch domofons: %s", err)
+            self.contracts = []
 
     async def _fetch_cameras(self):
         """Fetch cameras list and generate RTSP URLs."""
@@ -143,7 +156,7 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
                 await self._async_login()
 
             # Fetch data in parallel
-            await asyncio.gather(self._fetch_domofons(), self._fetch_cameras())
+            await asyncio.gather(self._fetch_domofons(), self._fetch_cameras(), self._fetch_contracts())
 
             # Map cameras to domofons
             self._map_cameras_to_domofons()
@@ -159,6 +172,7 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
                 "cameras": self.all_cameras,
                 "domofon_camera_map": self.domofons_cameras,
                 "standalone_cameras": self.standalone_cameras,
+                "contract": self.contracts,
             }
 
     async def async_open_door(self, domofon_id: str) -> bool:
