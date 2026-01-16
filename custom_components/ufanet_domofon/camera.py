@@ -115,7 +115,7 @@ class DomofonCamera(UfanetCamera):
             ATTR_RTSP_URL: self._camera_data.get("stream_source", ""),
         }
 
-    def stream_source(self) -> str | None:
+    async def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._camera_data.get("stream_source")
 
@@ -143,6 +143,6 @@ class StandaloneCamera(UfanetCamera):
         """Use stream to generate stills."""
         return True
 
-    def stream_source(self) -> str | None:
+    async def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._camera_data.get("stream_source")
