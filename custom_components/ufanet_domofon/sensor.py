@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -47,6 +47,8 @@ class BalanceSensor(CoordinatorEntity, SensorEntity):
         self._balance = contract.get("balance")
         self._attr_unique_id = f"ufanet_contract_{self._contract_id}_balance"
         self._attr_name = "Баланс"
+        self._attr_device_class = SensorDeviceClass.MONETARY
+        self._attr_state_class = SensorStateClass.TOTAL
         self.entity_id = f"sensor.ufanet_{self._contract_id}_balance"
 
     @property
