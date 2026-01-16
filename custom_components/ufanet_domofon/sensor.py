@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,7 +28,7 @@ async def async_setup_entry(
     for contract in coordinator.contracts:
         entities.append(BalanceSensor(coordinator, contract, "Баланс", "RUB"))
         entities.append(LimitSensor(coordinator, contract, "Лимит", "RUB"))
-        # entities.append(ActivitySensor(coordinator, contract))
+        entities.append(ActivitySensor(coordinator, contract, "Блокировка"))
 
     async_add_entities(entities, True)
 
@@ -115,3 +116,43 @@ class LimitSensor(CoordinatorEntity, SensorEntity):
     def icon(self):
         """Иконка для лимита."""
         return "mdi:cash"
+
+
+class ActivitySensor(CoordinatorEntity, BinarySensorEntity):
+    """Бинарный сенсор статуса активности."""
+
+    def __init__(self, coordinator, contract, name):
+        """Инициализация бинарного сенсора."""
+        super().__init__(coordinator)
+        self._sensor_type = "problem"
+        self._contract_data = contract
+        self._contract_id = contract.get("id")
+        self._name = name
+        self._attr_name = "Блокировка"
+        self._attr_unique_id = f"{DOMAIN}_{self._sensor_type}"
+        self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    @property
+    def device_info(self):
+        """Return device information for linking entities."""
+        return {
+            "identifiers": {(DOMAIN, self._contract_id)},
+        }
+
+    @property
+    def is_on(self):
+        """Возвращает статус активности."""
+        if self.coordinator.data:
+            return not bool(self._contract_data.get("enabled"))
+        return False
+
+    @property
+    def icon(self):
+        """Динамическая иконка в зависимости от статуса."""
+        return "mdi:check-circle" if not self.is_on else "mdi:close-circle"
+
+    @property
+    def extra_state_attributes(self):
+        """Дополнительные атрибуты."""
+        status_text = "Активен" if self.is_on else "Не активен"
+        return {"friendly_name": self._name, "status": status_text}
