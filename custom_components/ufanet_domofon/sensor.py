@@ -25,8 +25,8 @@ async def async_setup_entry(
     entities = []
 
     for contract in coordinator.contracts:
-        entities.append(BalanceSensor(coordinator, contract, "Баланс", "RUB"))  # noqa: PERF401
-        # entities.append(LimitSensor(coordinator, contract))
+        entities.append(BalanceSensor(coordinator, contract, "Баланс", "RUB"))
+        entities.append(LimitSensor(coordinator, contract, "Лимит", "RUB"))
         # entities.append(ActivitySensor(coordinator, contract))
 
     async_add_entities(entities, True)
@@ -72,4 +72,46 @@ class BalanceSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self):
         """Иконка для баланса."""
+        return "mdi:cash"
+
+
+class LimitSensor(CoordinatorEntity, SensorEntity):
+    """Balance sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator, contract, name, unit):
+        """Initialize."""
+        super().__init__(coordinator)
+        self._name = name
+        self._unit = unit
+        self._contract_data = contract
+        self._contract_id = contract.get("id")
+        self._limit = contract.get("limit")
+        self._attr_unique_id = f"ufanet_contract_{self._contract_id}_limit"
+        self._attr_name = "Лимит"
+        self._attr_device_class = SensorDeviceClass.MONETARY
+        self._attr_state_class = SensorStateClass.TOTAL
+        self.entity_id = f"sensor.ufanet_{self._contract_id}_limit"
+
+    @property
+    def device_info(self):
+        """Return device information for linking entities."""
+        return {
+            "identifiers": {(DOMAIN, self._contract_id)},
+        }
+
+    @property
+    def native_value(self):
+        """Возвращает значение лимита."""
+        return round(float(self._limit), 2) if self._limit is not None else None
+
+    @property
+    def native_unit_of_measurement(self):
+        """Возвращает единицу измерения."""
+        return self._unit
+
+    @property
+    def icon(self):
+        """Иконка для лимита."""
         return "mdi:cash"
