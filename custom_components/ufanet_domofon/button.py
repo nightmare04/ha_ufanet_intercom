@@ -33,6 +33,8 @@ async def async_setup_entry(
 class OpenDoorButton(CoordinatorEntity, ButtonEntity):
     """Button to open a domofon door."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator, domofon_data):
         """Initialize."""
         super().__init__(coordinator)
@@ -42,10 +44,13 @@ class OpenDoorButton(CoordinatorEntity, ButtonEntity):
         self._domofon_name = domofon_data.get("custom_name", "")
         self._last_opened = None
 
-        self._attr_name = "Открыть дверь"
-        self._attr_friendly_name = "Открыть дверь"
         self._attr_unique_id = f"ufanet_domofon_{self._domofon_id}_button"
         self._attr_icon = "mdi:door-open"
+
+    @property
+    def name(self):
+        """Return entity name."""
+        return "Открыть дверь"
 
     @property
     def device_info(self):

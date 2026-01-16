@@ -43,6 +43,7 @@ async def async_setup_entry(
 class UfanetCamera(CoordinatorEntity, Camera):
     """Base class for Ufanet cameras."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = CameraEntityFeature.STREAM
     _attr_frontend_stream_type = StreamType.HLS
     _attr_motion_detection_enabled = False
