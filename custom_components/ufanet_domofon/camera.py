@@ -2,13 +2,13 @@
 
 import logging
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import Camera, CameraEntityDescription, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_ADDRESS, ATTR_LATITUDE, ATTR_LONGITUDE, DOMAIN
+from .const import ATTR_ADDRESS, ATTR_CAMERA_NUMBER, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_RTSP_URL, DOMAIN
 from .coordinator import UfanetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +42,9 @@ async def async_setup_entry(
 class UfanetCamera(CoordinatorEntity, Camera):
     """Base class for Ufanet cameras."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+    _attr_motion_detection_enabled = False
+
     def __init__(self, coordinator, camera_data):
         """Initialize."""
         CoordinatorEntity.__init__(self, coordinator)
@@ -65,6 +68,11 @@ class UfanetCamera(CoordinatorEntity, Camera):
 
 class DomofonCamera(UfanetCamera):
     """Camera attached to a domofon."""
+
+    entity_description = CameraEntityDescription(
+        key="camera",
+        icon="mdi:doorbell-video",
+    )
 
     def __init__(self, coordinator, domofon_data, camera_data):
         """Initialize."""
@@ -94,6 +102,19 @@ class DomofonCamera(UfanetCamera):
         """Return the name of the sensor."""
         return "Камера"
 
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Use stream to generate stills."""
+        return True
+
+    @property
+    def extra_state_attributes(self):
+        """Return additional camera attributes."""
+        return {
+            ATTR_CAMERA_NUMBER: self._camera_data.get("number", ""),
+            ATTR_RTSP_URL: self._camera_data.get("stream_source", ""),
+        }
+
     def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._camera_data.get("stream_source")
@@ -116,6 +137,11 @@ class StandaloneCamera(UfanetCamera):
             "name": "Камеры Ufanet",
             "manufacturer": "Ufanet",
         }
+
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Use stream to generate stills."""
+        return True
 
     def stream_source(self) -> str | None:
         """Return the stream source."""

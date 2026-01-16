@@ -25,3 +25,8 @@ ATTR_LONGITUDE = "longitude"
 
 # Platforms
 PLATFORMS = ["camera", "button"]
+
+# Attributes
+ATTR_CAMERA_NUMBER = "intercom_id"
+ATTR_RTSP_URL = "rtsp_url"
+ATTR_LAST_UPDATE = "last_update"
