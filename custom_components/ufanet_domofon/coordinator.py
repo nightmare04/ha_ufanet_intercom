@@ -24,7 +24,7 @@ class UfanetDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Ufanet Domofon",
-            update_interval=timedelta(seconds=SCAN_INTERVAL),
+            update_interval=timedelta(hours=SCAN_INTERVAL),
         )
 
         self.entry = entry

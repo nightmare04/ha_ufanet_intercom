@@ -2,7 +2,7 @@
 
 DOMAIN = "ufanet_domofon"
 DEFAULT_NAME = "Ufanet Domofon"
-SCAN_INTERVAL = 30  # seconds
+SCAN_INTERVAL = 24  # hours
 
 # API endpoints
 BASE_URL = "https://dom.ufanet.ru/"
